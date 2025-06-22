@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Styled Calculator</title>
+  <style>
+    body {
+      background: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .calculator {
+      background: #ccc;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    .display {
+      width: 100%;
+      height: 50px;
+      background: #eee;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      text-align: right;
+      padding: 10px;
+      font-size: 24px;
+      box-shadow: inset 0 0 5px #999;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 60px);
+      gap: 10px;
+    }
+
+    .button {
+      height: 60px;
+      font-size: 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #eee;
+    }
+
+    .button.operator {
+      background: #222;
+      color: #fff;
+    }
+
+    .button.clear {
+      background: red;
+      color: #fff;
+    }
+
+    .button.equal {
+      background: #444;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+<div class="calculator">
+  <div class="display" id="display"></div>
+  <div class="buttons">
+    <button class="button" onclick="append('7')">7</button>
+    <button class="button" onclick="append('8')">8</button>
+    <button class="button" onclick="append('9')">9</button>
+    <button class="button operator" onclick="append('+')">+</button>
+
+    <button class="button" onclick="append('4')">4</button>
+    <button class="button" onclick="append('5')">5</button>
+    <button class="button" onclick="append('6')">6</button>
+    <button class="button operator" onclick="append('-')">-</button>
+
+    <button class="button" onclick="append('1')">1</button>
+    <button class="button" onclick="append('2')">2</button>
+    <button class="button" onclick="append('3')">3</button>
+    <button class="button operator" onclick="append('x')">&times;</button>
+
+    <button class="button clear" onclick="clearDisplay()">C</button>
+    <button class="button" onclick="append('0')">0</button>
+    <button class="button equal" onclick="calculate()">=</button>
+    <button class="button operator" onclick="append('/')">/</button>
+  </div>
+</div>
+
+<script>
+  function append(value) {
+    document.getElementById('display').innerText += value;
+  }
+
+  function clearDisplay() {
+    document.getElementById('display').innerText = '';
+  }
+
+  function calculate() {
+    const expression = document.getElementById('display').innerText.trim();
+    const match = expression.match(/^(\d+(?:\.\d+)?)([\+\-x\/])(\d+(?:\.\d+)?)$/);
+    if (!match) {
+      document.getElementById('display').innerText = 'Error';
+      return;
+    }
+
+    const num1 = match[1];
+    const symbol = match[2];
+    const num2 = match[3];
+
+    const operation =
+      symbol === '+' ? 'add' :
+      symbol === '-' ? 'sub' :
+      symbol === 'x' ? 'mul' :
+      symbol === '/' ? 'div' :
+      null;
+
+    if (!operation) {
+      document.getElementById('display').innerText = 'Error';
+      return;
+    }
+
+    fetch(`/api/calculate?num1=${num1}&num2=${num2}&operation=${operation}`)
+      .then(response => response.text())
+      .then(result => {
+        const parsed = parseFloat(result);
+        if (isNaN(parsed)) {
+          document.getElementById('display').innerText = 'Error';
+        } else {
+          document.getElementById('display').innerText =
+            Number.isInteger(parsed) ? parsed.toString() : parsed.toFixed(4).replace(/\.?0+$/, '');
+        }
+      })
+      .catch(error => {
+        document.getElementById('display').innerText = 'Error';
+      });
+  }
+</script>
+</body>
+</html>
